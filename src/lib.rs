@@ -60,4 +60,4 @@ pub mod store;
 pub use config::IdempotencyConfig;
 pub use error::IdempotencyError;
 pub use middleware::idempotency_middleware;
-pub use store::{InMemoryStore, StoredResponse, Store};
+pub use store::{InMemoryStore, Store, StoredResponse};

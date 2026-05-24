@@ -26,12 +26,9 @@ async fn main() {
     let store = Arc::new(InMemoryStore::new());
     let config = IdempotencyConfig::default().with_ttl(Duration::from_secs(30 * 60));
 
-    let app = Router::new()
-        .route("/charges", post(create_charge))
-        .layer(axum::middleware::from_fn_with_state(
-            (store, config),
-            idempotency_middleware,
-        ));
+    let app = Router::new().route("/charges", post(create_charge)).layer(
+        axum::middleware::from_fn_with_state((store, config), idempotency_middleware),
+    );
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("listening on http://localhost:3000");
@@ -53,8 +50,8 @@ async fn create_charge(Json(body): Json<Value>) -> impl IntoResponse {
 
 fn rand_id() -> u32 {
     use std::time::{SystemTime, UNIX_EPOCH};
-    (SystemTime::now()
+    SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .subsec_nanos()) as u32
+        .subsec_nanos()
 }

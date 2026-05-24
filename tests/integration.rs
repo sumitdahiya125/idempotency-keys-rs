@@ -7,16 +7,12 @@ use axum::{
 };
 use idempotency_keys::{idempotency_middleware, IdempotencyConfig, InMemoryStore};
 use serde_json::{json, Value};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 use tower::ServiceExt;
 
-fn build_app(
-    store: Arc<InMemoryStore>,
-    cfg: IdempotencyConfig,
-    counter: Arc<AtomicU32>,
-) -> Router {
+fn build_app(store: Arc<InMemoryStore>, cfg: IdempotencyConfig, counter: Arc<AtomicU32>) -> Router {
     let counter_for_handler = counter.clone();
     let handler = move |Json(body): Json<Value>| {
         let counter = counter_for_handler.clone();
@@ -140,10 +136,7 @@ async fn get_requests_bypass_middleware() {
     let store = Arc::new(InMemoryStore::new());
     let cfg = IdempotencyConfig::default();
     let app: Router = Router::new()
-        .route(
-            "/charges",
-            axum::routing::get(|| async { "ok" }),
-        )
+        .route("/charges", axum::routing::get(|| async { "ok" }))
         .layer(axum::middleware::from_fn_with_state(
             (store, cfg),
             idempotency_middleware,

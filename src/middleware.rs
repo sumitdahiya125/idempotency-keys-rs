@@ -1,7 +1,7 @@
 //! The axum middleware function.
 
 use crate::config::IdempotencyConfig;
-use crate::store::{StoredResponse, Store};
+use crate::store::{Store, StoredResponse};
 use axum::{
     body::{Body, Bytes},
     extract::{Request, State},
@@ -133,6 +133,7 @@ where
 
 // ---- helpers --------------------------------------------------------------
 
+#[allow(clippy::result_large_err)]
 fn extract_key(req: &Request, cfg: &IdempotencyConfig) -> Result<String, Response> {
     let name = match HeaderName::try_from(cfg.header.as_str()) {
         Ok(n) => n,
@@ -172,6 +173,7 @@ fn extract_key(req: &Request, cfg: &IdempotencyConfig) -> Result<String, Respons
     Ok(s)
 }
 
+#[allow(clippy::result_large_err)]
 async fn read_limited(body: Body, limit: usize) -> Result<Bytes, Response> {
     // Use http_body_util to read with a size limit.
     let collected = http_body_util::Limited::new(body, limit)
@@ -197,8 +199,10 @@ fn rebuild_response(stored: StoredResponse) -> Response {
     let mut builder = Response::builder().status(stored.status);
     let headers = builder.headers_mut().expect("builder has headers");
     for (name, value) in &stored.headers {
-        if let (Ok(n), Ok(v)) = (HeaderName::try_from(name.as_str()), HeaderValue::from_bytes(value))
-        {
+        if let (Ok(n), Ok(v)) = (
+            HeaderName::try_from(name.as_str()),
+            HeaderValue::from_bytes(value),
+        ) {
             headers.insert(n, v);
         }
     }
@@ -213,10 +217,5 @@ fn rebuild_response(stored: StoredResponse) -> Response {
 
 fn error_response(status: StatusCode, code: &str, msg: &str) -> Response {
     let body = format!(r#"{{"error":"{code}","message":"{msg}"}}"#);
-    (
-        status,
-        [("content-type", "application/json")],
-        body,
-    )
-        .into_response()
+    (status, [("content-type", "application/json")], body).into_response()
 }

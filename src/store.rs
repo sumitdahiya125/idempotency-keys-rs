@@ -44,8 +44,13 @@ pub struct InMemoryStore {
 
 #[derive(Debug, Clone)]
 enum Slot {
-    Reserved { expires_at: Instant },
-    Stored { value: StoredResponse, expires_at: Instant },
+    Reserved {
+        expires_at: Instant,
+    },
+    Stored {
+        value: StoredResponse,
+        expires_at: Instant,
+    },
 }
 
 impl InMemoryStore {
